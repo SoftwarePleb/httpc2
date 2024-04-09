@@ -1,0 +1,3 @@
+/home/Leo/source/http/cmake-build-debug/CMakeFiles/http.dir
+/home/Leo/source/http/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/Leo/source/http/cmake-build-debug/CMakeFiles/rebuild_cache.dir

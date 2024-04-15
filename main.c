@@ -69,6 +69,7 @@ int main(int argc, char *argv[]) {
     int acceptchk;
     socklen_t clientaddlen;
     struct sockaddr clientaddr;
+    char buffer[1024];
 
 
     printf("started loot \n");
@@ -86,22 +87,25 @@ int main(int argc, char *argv[]) {
         printf("Listening for connection \n");
 
         //started to accept
-        acceptchk = accept(socketfd, &clientaddr, &clientaddlen);
+        acceptchk = accept(socketfd, &clientaddr, &clientaddr);
         if(acceptchk == -1){
             printf("couldn't accept client connection \n");
         }
 
         //buffer stuff
-        printf("New fd: %d", acceptchk);
-        char buffer[1024];
+        printf("New fd: %d \n", acceptchk);
         readchk = read(acceptchk, buffer, sizeof(buffer));
         if (readchk == -1) {
             printf("error reading from client \n");
-            return -1;
         }
-        printf("Received message: %s\n", buffer);
+        printf("%.*s\n", (int)readchk, buffer);
+        printf("Received message: %s \n", buffer);
+        printf("Received message: %c \n", buffer[0]);
+        printf("Received message: %c \n", buffer[1]);
 
-        send(readchk, "Hello, world!", 13, 0);
+        send(readchk, "Hello, world! \n", 13, 0);
+
+        close(readchk);
 
 
     }

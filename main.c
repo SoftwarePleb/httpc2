@@ -70,6 +70,9 @@ int main(int argc, char *argv[]) {
     socklen_t clientaddlen;
     struct sockaddr clientaddr;
     char buffer[1024];
+    char testResponse[] = "HTTP/1.1 200 OK\nContent-Length: 12\nContent-Type: text-html\n\nHello World!";
+    printf("TestRes: %s", testResponse);
+    int testResponselen = strlen(testResponse);
 
 
     printf("started loot \n");
@@ -87,7 +90,7 @@ int main(int argc, char *argv[]) {
         printf("Listening for connection \n");
 
         //started to accept
-        acceptchk = accept(socketfd, &clientaddr, &clientaddr);
+        acceptchk = accept(socketfd, &clientaddr, &clientaddlen);
         if(acceptchk == -1){
             printf("couldn't accept client connection \n");
         }
@@ -99,11 +102,8 @@ int main(int argc, char *argv[]) {
             printf("error reading from client \n");
         }
         printf("%.*s\n", (int)readchk, buffer);
-        printf("Received message: %s \n", buffer);
-        printf("Received message: %c \n", buffer[0]);
-        printf("Received message: %c \n", buffer[1]);
 
-        send(readchk, "Hello, world! \n", 13, 0);
+        send(acceptchk, testResponse, testResponselen, 0);
 
         close(readchk);
 

@@ -4,6 +4,34 @@
 #include <netdb.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <regex.h>
+#include <errno.h>
+
+char* readHttpRequest(char* Message, int MessangeLength){
+
+    printf("%.*s\n", (int)MessangeLength, Message);
+    char* headerRegex = "GET \\/ HTTP\\/[0-9].[0-9]";
+
+
+    regex_t regex;
+    regmatch_t pmatch[1];
+    if(regcomp(&regex, headerRegex, 0)!=0){
+        printf("Error, coulnd't compile expression");
+    }
+
+    int regexcheck = regexec(&regex, Message, 0, NULL, 0);
+
+    if(regexcheck == 0){
+        printf("foudnd ya");
+    }
+
+    if(regexcheck == REG_NOMATCH){
+        printf("error didn't find string");
+    }
+
+    return headerRegex;
+
+}
 
 int main(int argc, char *argv[]) {
     int readchk;
@@ -60,7 +88,7 @@ int main(int argc, char *argv[]) {
 
     freeaddrinfo(result);
 
-    if (socketfd == NULL){
+    if (result == NULL){
         printf("Could not bind");
         return -1;
     }
@@ -73,6 +101,7 @@ int main(int argc, char *argv[]) {
     char testResponse[] = "HTTP/1.1 200 OK\nContent-Length: 12\nContent-Type: text-html\n\nHello World!";
     printf("TestRes: %s", testResponse);
     int testResponselen = strlen(testResponse);
+    char* testHttpParser;
 
 
     printf("started loot \n");
@@ -101,9 +130,15 @@ int main(int argc, char *argv[]) {
         if (readchk == -1) {
             printf("error reading from client \n");
         }
-        printf("%.*s\n", (int)readchk, buffer);
+
+        testHttpParser = readHttpRequest(buffer, readchk);
+
+        printf("\n");
 
         send(acceptchk, testResponse, testResponselen, 0);
+
+
+        printf("\n");
 
         close(readchk);
 

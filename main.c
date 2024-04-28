@@ -7,33 +7,76 @@
 #include <regex.h>
 #include <errno.h>
 
-char* readHttpRequest(char* Message, int MessangeLength){
+void readHttpRequest(char* Message, int MessangeLength, int socketfd){
 
+    //prepare statements
+
+    char responseSuccess[] = "HTTP/1.0 200 OK\nContent-Length: 12\nContent-Type: text-html\n\nHello World!";
+    int responseSuccessLen = strlen(responseSuccess);
+
+    char requestIncorrect[] = "HTTP/1.0 400 Bad Request\nContent-Length: 12\nContent-Type: text-html\n\nBad Request";
+    int requestIncorrectLen = strlen(requestIncorrect);
+
+    char URLNotFound[] = "HTTP/1.0 404 Not Found\nContent-Length: 12\nContent-Type: text-html\n\nNot Found";
+    int URLNotFoundLen = strlen(URLNotFound);
+
+    char InternalError[] = "HTTP/1.0 500 Internal Server Error\nContent-Length: 12\nContent-Type: text-html\n\n500 Internal Server Error";
+    int InternalErrorLen = strlen(InternalError);
+
+    char NotImplemented[] = "HTTP/1.0 501 Not Implemented\nContent-Length: 12\nContent-Type: text-html\n\nNot Implemented";
+    int NotImplementedLen = strlen(NotImplemented);
+
+
+    // check that the header is correctly formed.
     printf("%.*s\n", (int)MessangeLength, Message);
-    char* headerRegex = "GET \\/ HTTP\\/[0-9].[0-9]";
-
-
     regex_t regex;
-    regmatch_t pmatch[1];
-    if(regcomp(&regex, headerRegex, 0)!=0){
-        printf("Error, coulnd't compile expression");
+
+    // Check for POST, PUT and DELETE request.
+    char *postRegex = "POST \\/ HTTP\\/[0-9].[0-9]";
+    char *putRegex = "PUT \\/ HTTP\\/[0-9].[0-9]";
+    char *deleteRegex = "DELETE \\/ HTTP\\/[0-9].[0-9]";
+    char *getRegex = "GET \\/ HTTP\\/[0-9].[0-9]";
+
+    if (regcomp(&regex, getRegex, 0) == 0 && regexec(&regex, Message, 0, NULL, 0) == 0) {
+        printf("The request is a valid GET request\n");
+        send(socketfd, responseSuccess, responseSuccessLen, 0);
+        return;
     }
 
-    int regexcheck = regexec(&regex, Message, 0, NULL, 0);
-
-    if(regexcheck == 0){
-        printf("foudnd ya");
+    if (regcomp(&regex, postRegex, 0) == 0 && regexec(&regex, Message, 0, NULL, 0) == 0) {
+        printf("The request is a valid POST request\n");
+        send(socketfd, NotImplemented, NotImplementedLen, 0);
+        return;
     }
 
-    if(regexcheck == REG_NOMATCH){
-        printf("error didn't find string");
+    if (regcomp(&regex, putRegex, 0) == 0 && regexec(&regex, Message, 0, NULL, 0) == 0) {
+        printf("The request is a valid PUT request\n");
+        send(socketfd, NotImplemented, NotImplementedLen, 0);
+        return;
+
     }
 
-    return headerRegex;
+    if (regcomp(&regex, deleteRegex, 0) == 0 && regexec(&regex, Message, 0, NULL, 0) == 0) {
+        printf("The request is a valid Delete request\n");
+        send(socketfd, NotImplemented, NotImplementedLen, 0);
+        return;
+    }
 
+    //if we reach here then the request is not correctly formatted
+    printf("The request does not have a properly formatted header\n");
+    send(socketfd, requestIncorrect, requestIncorrectLen, 0);
+    close(socketfd);
 }
 
+
+
 int main(int argc, char *argv[]) {
+    int listenchk;
+    int acceptchk;
+    socklen_t clientAddrLen;
+    struct sockaddr clientAddr;
+    char buffer[1024];
+
     int readchk;
 
     // get the port from the user and check it works
@@ -55,8 +98,7 @@ int main(int argc, char *argv[]) {
     struct addrinfo hints;
     struct addrinfo *result;
 
-    memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_UNSPEC;
+    memset(&hints, 0, sizeof(hints)); hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = 0;
     hints.ai_flags = AI_PASSIVE;
@@ -93,17 +135,6 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
-    int listenchk;
-    int acceptchk;
-    socklen_t clientaddlen;
-    struct sockaddr clientaddr;
-    char buffer[1024];
-    char testResponse[] = "HTTP/1.1 200 OK\nContent-Length: 12\nContent-Type: text-html\n\nHello World!";
-    printf("TestRes: %s", testResponse);
-    int testResponselen = strlen(testResponse);
-    char* testHttpParser;
-
-
     printf("started loot \n");
     // handle incomming connections
     for (;;) {
@@ -117,11 +148,11 @@ int main(int argc, char *argv[]) {
         }
 
         printf("Listening for connection \n");
-
         //started to accept
-        acceptchk = accept(socketfd, &clientaddr, &clientaddlen);
+        acceptchk = accept(socketfd, &clientAddr, &clientAddrLen);
         if(acceptchk == -1){
             printf("couldn't accept client connection \n");
+            printf("error code: %s \n", strerror(errno));
         }
 
         //buffer stuff
@@ -129,19 +160,11 @@ int main(int argc, char *argv[]) {
         readchk = read(acceptchk, buffer, sizeof(buffer));
         if (readchk == -1) {
             printf("error reading from client \n");
+            fprintf(stderr, "printf failed!\n");;
         }
 
-        testHttpParser = readHttpRequest(buffer, readchk);
-
-        printf("\n");
-
-        send(acceptchk, testResponse, testResponselen, 0);
-
-
-        printf("\n");
-
-        close(readchk);
-
+        //handle http request
+        readHttpRequest(buffer, readchk, acceptchk);
 
     }
 

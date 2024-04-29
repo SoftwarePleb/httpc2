@@ -26,42 +26,39 @@ void readHttpRequest(char* Message, int MessangeLength, int socketfd){
     char NotImplemented[] = "HTTP/1.0 501 Not Implemented\nContent-Length: 12\nContent-Type: text-html\n\nNot Implemented";
     int NotImplementedLen = strlen(NotImplemented);
 
-
     // check that the header is correctly formed.
     printf("%.*s\n", (int)MessangeLength, Message);
     regex_t regex;
 
     // Check for POST, PUT and DELETE request.
-    char *postRegex = "POST \\/ HTTP\\/[0-9].[0-9]";
-    char *putRegex = "PUT \\/ HTTP\\/[0-9].[0-9]";
-    char *deleteRegex = "DELETE \\/ HTTP\\/[0-9].[0-9]";
-    char *getRegex = "GET \\/ HTTP\\/[0-9].[0-9]";
+    char *postRegex = "^POST \\/[^\\s](.*) HTTP\\/[0-9]\\.[0-9]";
+    char *putRegex = "^PUT \\/[^\\s](.*) HTTP\\/[0-9]\\.[0-9]";
+    char *deleteRegex = "^DELETE \\/[^\\s](.*) HTTP\\/[0-9]\\.[0-9]";
+    char *getRegex = "^GET \\/[^\\s](.*) HTTP\\/[0-9]\\.[0-9]";
 
-    if (regcomp(&regex, getRegex, 0) == 0 && regexec(&regex, Message, 0, NULL, 0) == 0) {
+
+    if (regcomp(&regex, getRegex, REG_EXTENDED) == 0 && regexec(&regex, Message, 0, NULL, 0) == 0) {
         printf("The request is a valid GET request\n");
         send(socketfd, responseSuccess, responseSuccessLen, 0);
         return;
     }
 
-    if (regcomp(&regex, postRegex, 0) == 0 && regexec(&regex, Message, 0, NULL, 0) == 0) {
+    if (regcomp(&regex, postRegex, REG_EXTENDED) == 0 && regexec(&regex, Message, 0, NULL, 0) == 0) {
         printf("The request is a valid POST request\n");
         send(socketfd, NotImplemented, NotImplementedLen, 0);
-        return;
-    }
+        return; }
 
-    if (regcomp(&regex, putRegex, 0) == 0 && regexec(&regex, Message, 0, NULL, 0) == 0) {
+    if (regcomp(&regex, putRegex, REG_EXTENDED) == 0 && regexec(&regex, Message, 0, NULL, 0) == 0) {
         printf("The request is a valid PUT request\n");
         send(socketfd, NotImplemented, NotImplementedLen, 0);
         return;
-
     }
 
-    if (regcomp(&regex, deleteRegex, 0) == 0 && regexec(&regex, Message, 0, NULL, 0) == 0) {
+    if (regcomp(&regex, deleteRegex, REG_EXTENDED) == 0 && regexec(&regex, Message, 0, NULL, 0) == 0) {
         printf("The request is a valid Delete request\n");
         send(socketfd, NotImplemented, NotImplementedLen, 0);
         return;
     }
-
     //if we reach here then the request is not correctly formatted
     printf("The request does not have a properly formatted header\n");
     send(socketfd, requestIncorrect, requestIncorrectLen, 0);
@@ -76,14 +73,20 @@ int main(int argc, char *argv[]) {
     socklen_t clientAddrLen;
     struct sockaddr clientAddr;
     char buffer[1024];
-
     int readchk;
 
     // get the port from the user and check it works
-    if (argc > 2) {
-        printf("Only one argument is supported.");
+    if (argc > 3) {
+        printf("Expected two arguments port and root");
         return -1;
     }
+
+    char* root = argv[2];
+
+    if(chdir(root)!=0){
+        printf("Couldn't access or find directory");
+        return -1;
+    };
 
     int port = atoi(argv[1]);
 

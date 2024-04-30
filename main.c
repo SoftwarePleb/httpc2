@@ -7,7 +7,10 @@
 #include <regex.h>
 #include <errno.h>
 
+#define ARRAY_SIZE(arr) (sizeof((arr)) / sizeof((arr)[0]))
+
 void readHttpRequest(char* Message, int MessangeLength, int socketfd){
+
 
     //prepare statements
 
@@ -34,10 +37,29 @@ void readHttpRequest(char* Message, int MessangeLength, int socketfd){
     char *postRegex = "^POST \\/[^\\s](.*) HTTP\\/[0-9]\\.[0-9]";
     char *putRegex = "^PUT \\/[^\\s](.*) HTTP\\/[0-9]\\.[0-9]";
     char *deleteRegex = "^DELETE \\/[^\\s](.*) HTTP\\/[0-9]\\.[0-9]";
-    char *getRegex = "^GET \\/[^\\s](.*) HTTP\\/[0-9]\\.[0-9]";
+    char *getRegex = "^GET \\/([^ ]*) HTTP\\/[0-9]\\.[0-9]\r\n";
 
 
-    if (regcomp(&regex, getRegex, REG_EXTENDED) == 0 && regexec(&regex, Message, 0, NULL, 0) == 0) {
+
+    // get reg matches to capture url
+    regmatch_t pmatch[3];
+    if (regcomp(&regex, getRegex, REG_EXTENDED) == 0 && regexec(&regex, Message, 3, pmatch, 0) == 0) {
+
+        int start = pmatch[1].rm_so;
+        int length = pmatch[1].rm_eo;
+        char fileName[length - start + 1];
+        memcpy(fileName, &Message[start], length - start);
+        fileName[length - start] = '\0';
+        printf("filename: %s\n", fileName);
+
+        if(fseek(fileName, 0, SEEK_END)!=0){
+            printf("Couldn't find file");
+            return;
+        }
+
+
+
+
         printf("The request is a valid GET request\n");
         send(socketfd, responseSuccess, responseSuccessLen, 0);
         return;

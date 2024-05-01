@@ -60,7 +60,16 @@ void readHttpRequest(char* Message, int MessangeLength, int socketfd){
            send(socketfd, URLNotFound, URLNotFoundLen, 0);
        }
 
+        fseek(file, 0, SEEK_END);
+        long fsize = ftell(file);
+        fseek(file, 0, SEEK_SET);
+        char *fileContent = malloc(fsize + 1);
+        fread(fileContent, fsize, 1, file);
+        fileContent[fsize] = 0;
+        fclose(file);
+
         printf("Found file \n");
+        printf("file is: %s \n", fileContent);
         printf("The request is a valid GET request\n");
         send(socketfd, responseSuccess, responseSuccessLen, 0);
         return;

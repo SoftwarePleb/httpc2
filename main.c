@@ -45,6 +45,7 @@ void readHttpRequest(char* Message, int MessangeLength, int socketfd){
     regmatch_t pmatch[3];
     if (regcomp(&regex, getRegex, REG_EXTENDED) == 0 && regexec(&regex, Message, 3, pmatch, 0) == 0) {
 
+        FILE* file;
         int start = pmatch[1].rm_so;
         int length = pmatch[1].rm_eo;
         char fileName[length - start + 1];
@@ -52,14 +53,14 @@ void readHttpRequest(char* Message, int MessangeLength, int socketfd){
         fileName[length - start] = '\0';
         printf("filename: %s\n", fileName);
 
-        if(fseek(fileName, 0, SEEK_END)!=0){
-            printf("Couldn't find file");
-            return;
-        }
+        file = fopen(fileName, "r");
+        if(file == NULL){
+           fclose(file);
+           printf("File Not Found");
+           send(socketfd, URLNotFound, URLNotFoundLen, 0);
+       }
 
-
-
-
+        printf("Found file \n");
         printf("The request is a valid GET request\n");
         send(socketfd, responseSuccess, responseSuccessLen, 0);
         return;

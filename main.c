@@ -45,6 +45,16 @@ void readHttpRequest(char* Message, int MessangeLength, int socketfd){
     regmatch_t pmatch[3];
     if (regcomp(&regex, getRegex, REG_EXTENDED) == 0 && regexec(&regex, Message, 3, pmatch, 0) == 0) {
 
+        if(pmatch[1].rm_eo == pmatch[1].rm_so){
+            printf("we got a valid get but it didn't have a resource");
+            send(socketfd, responseSuccess, responseSuccessLen, 0);
+            return;
+        }
+
+        printf("pmatch[1] %d", pmatch[1].rm_so);
+        printf("pmatch[1] %d", pmatch[1].rm_eo);
+
+
         FILE* file;
         int start = pmatch[1].rm_so;
         int length = pmatch[1].rm_eo;
@@ -58,7 +68,10 @@ void readHttpRequest(char* Message, int MessangeLength, int socketfd){
            fclose(file);
            printf("File Not Found");
            send(socketfd, URLNotFound, URLNotFoundLen, 0);
-       } printf("string test");
+           return;
+       }
+
+        printf("string test");
         fseek(file, 0, SEEK_END);
         long fsize = ftell(file);
         fseek(file, 0, SEEK_SET);
@@ -79,13 +92,14 @@ void readHttpRequest(char* Message, int MessangeLength, int socketfd){
         if (regcomp(&regFileExtension, checkFileExtension, REG_EXTENDED) == 0 && regexec(&regFileExtension, fileName, 2, p2match, 0) != 0) {
             send(socketfd, InternalError, InternalErrorLen, 0);
             close(socketfd);
+            return;
         }
 
 
         int start2 = p2match[1].rm_so;
         int length2 = p2match[1].rm_eo;
         char fileExt[length2 - start2 + 1];
-        memcpy(fileExt, &Message[start2], length2-start2);
+        memcpy(fileExt, &fileName[start2], length2-start2);
         fileExt[length2 - start2] = '\0';
         printf("fileExtension: %s\n", fileExt);
 
@@ -113,6 +127,10 @@ void readHttpRequest(char* Message, int MessangeLength, int socketfd){
 
         if (strcmp(fileExt, "svg")==0){
             headerFormat = "HTTP/1.0 200 OK\nContent-Length: %ld\nContent-Type: image-svg\n\n";
+        }
+
+        if (strcmp(fileExt, "ico")==0){
+            headerFormat = "HTTP/1.0 200 OK\nContent-Length: %ld\nContent-Type: image-x-icon\n\n";
         }
 
         char *responseBody = malloc(fsize + strlen(headerFormat));

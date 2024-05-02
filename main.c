@@ -58,22 +58,29 @@ void readHttpRequest(char* Message, int MessangeLength, int socketfd){
            fclose(file);
            printf("File Not Found");
            send(socketfd, URLNotFound, URLNotFoundLen, 0);
-       }
-
-        printf("string test");
-
+       } printf("string test");
         fseek(file, 0, SEEK_END);
         long fsize = ftell(file);
         fseek(file, 0, SEEK_SET);
         char *fileContent = malloc(fsize + 1);
         fread(fileContent, fsize, 1, file);
+        //set null terminator thingy
         fileContent[fsize] = 0;
         fclose(file);
 
         printf("Found file \n");
         printf("file is: %s \n", fileContent);
         printf("The request is a valid GET request\n");
-        send(socketfd, responseSuccess, responseSuccessLen, 0);
+
+        char headerFormat[] = "HTTP/1.0 200 OK\nContent-Length: %ld\nContent-Type: text-html\n\n";
+        char *responseBody = malloc(fsize + strlen(headerFormat)); // 20 is for integer size
+
+        sprintf(responseBody, headerFormat, fsize);
+        strcat(responseBody, fileContent);
+
+        size_t responseLen = strlen(responseBody);
+        send(socketfd, responseBody, responseLen, 0);
+        free(responseBody);
         return;
     }
 

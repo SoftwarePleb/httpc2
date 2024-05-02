@@ -60,6 +60,8 @@ void readHttpRequest(char* Message, int MessangeLength, int socketfd){
            send(socketfd, URLNotFound, URLNotFoundLen, 0);
        }
 
+        printf("string test");
+
         fseek(file, 0, SEEK_END);
         long fsize = ftell(file);
         fseek(file, 0, SEEK_SET);

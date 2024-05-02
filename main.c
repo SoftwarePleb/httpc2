@@ -72,8 +72,46 @@ void readHttpRequest(char* Message, int MessangeLength, int socketfd){
         printf("file is: %s \n", fileContent);
         printf("The request is a valid GET request\n");
 
-        char headerFormat[] = "HTTP/1.0 200 OK\nContent-Length: %ld\nContent-Type: text-html\n\n";
-        char *responseBody = malloc(fsize + strlen(headerFormat)); // 20 is for integer size
+        regex_t regFileExtension;
+        char* checkFileExtension = "\\.(.*)$";
+
+        regmatch_t p2match[2];
+        if (regcomp(&regFileExtension, checkFileExtension, REG_EXTENDED) == 0 && regexec(&regFileExtension, fileName, 2, p2match, 0) != 0) {
+            send(socketfd, InternalError, InternalErrorLen, 0);
+            close(socketfd);
+        }
+
+
+        int start2 = p2match[1].rm_so;
+        int length2 = p2match[1].rm_eo;
+        char fileExt[length2 - start2 + 1];
+        memcpy(fileExt, &Message[start2], length2-start2);
+        fileExt[length2 - start2] = '\0';
+        printf("fileExtension: %s\n", fileExt);
+
+        char *headerFormat;
+
+        if (strcmp(fileExt, "js")==0){
+           headerFormat = "HTTP/1.0 200 OK\nContent-Length: %ld\nContent-Type: text-javascript\n\n";
+        }
+
+        if (strcmp(fileExt, "html")==0){
+            headerFormat = "HTTP/1.0 200 OK\nContent-Length: %ld\nContent-Type: text-html\n\n";
+        }
+
+        if (strcmp(fileExt, "css")==0){
+            headerFormat = "HTTP/1.0 200 OK\nContent-Length: %ld\nContent-Type: text-css\n\n";
+        }
+
+        if (strcmp(fileExt, "mp3")==0){
+            headerFormat = "HTTP/1.0 200 OK\nContent-Length: %ld\nContent-Type: audio-mpeg\n\n";
+        }
+
+        if (strcmp(fileExt, "img")==0){
+            headerFormat = "HTTP/1.0 200 OK\nContent-Length: %ld\nContent-Type: image-jpeg\n\n";
+        }
+
+        char *responseBody = malloc(fsize + strlen(headerFormat));
 
         sprintf(responseBody, headerFormat, fsize);
         strcat(responseBody, fileContent);

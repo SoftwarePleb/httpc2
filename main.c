@@ -111,6 +111,10 @@ void readHttpRequest(char* Message, int MessangeLength, int socketfd){
             headerFormat = "HTTP/1.0 200 OK\nContent-Length: %ld\nContent-Type: image-jpeg\n\n";
         }
 
+        if (strcmp(fileExt, "svg")==0){
+            headerFormat = "HTTP/1.0 200 OK\nContent-Length: %ld\nContent-Type: image-svg\n\n";
+        }
+
         char *responseBody = malloc(fsize + strlen(headerFormat));
 
         sprintf(responseBody, headerFormat, fsize);
@@ -138,6 +142,7 @@ void readHttpRequest(char* Message, int MessangeLength, int socketfd){
         send(socketfd, NotImplemented, NotImplementedLen, 0);
         return;
     }
+
     //if we reach here then the request is not correctly formatted
     printf("The request does not have a properly formatted header\n");
     send(socketfd, requestIncorrect, requestIncorrectLen, 0);

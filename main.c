@@ -51,10 +51,6 @@ void readHttpRequest(char* Message, int MessangeLength, int socketfd){
             return;
         }
 
-        printf("pmatch[1] %d", pmatch[1].rm_so);
-        printf("pmatch[1] %d", pmatch[1].rm_eo);
-
-
         FILE* file;
         int start = pmatch[1].rm_so;
         int length = pmatch[1].rm_eo;
@@ -62,28 +58,6 @@ void readHttpRequest(char* Message, int MessangeLength, int socketfd){
         memcpy(fileName, &Message[start], length - start);
         fileName[length - start] = '\0';
         printf("filename: %s\n", fileName);
-
-        file = fopen(fileName, "r");
-        if(file == NULL){
-           fclose(file);
-           printf("File Not Found");
-           send(socketfd, URLNotFound, URLNotFoundLen, 0);
-           return;
-       }
-
-        printf("string test");
-        fseek(file, 0, SEEK_END);
-        long fsize = ftell(file);
-        fseek(file, 0, SEEK_SET);
-        char *fileContent = malloc(fsize + 1);
-        fread(fileContent, fsize, 1, file);
-        //set null terminator thingy
-        fileContent[fsize] = 0;
-        fclose(file);
-
-        printf("Found file \n");
-        printf("file is: %s \n", fileContent);
-        printf("The request is a valid GET request\n");
 
         regex_t regFileExtension;
         char* checkFileExtension = "\\.(.*)$";
@@ -95,7 +69,6 @@ void readHttpRequest(char* Message, int MessangeLength, int socketfd){
             return;
         }
 
-
         int start2 = p2match[1].rm_so;
         int length2 = p2match[1].rm_eo;
         char fileExt[length2 - start2 + 1];
@@ -103,44 +76,76 @@ void readHttpRequest(char* Message, int MessangeLength, int socketfd){
         fileExt[length2 - start2] = '\0';
         printf("fileExtension: %s\n", fileExt);
 
-        char *headerFormat;
+
+        if((strcmp(fileExt, "svg")) == 0 || (strcmp(fileExt, "jpg")) == 0 || (strcmp(fileExt, "mp3") == 0) ){
+            file = fopen(fileName, "rb");
+        } else{
+            file = fopen(fileName, "r");
+        }
+
+        if(file == NULL){
+           printf("File Not Found");
+           send(socketfd, URLNotFound, URLNotFoundLen, 0);
+           close(socketfd);
+           return;
+       }
+
+        printf("string test");
+        fseek(file, 0, SEEK_END);
+        long fsize = ftell(file);
+        fseek(file, 0, SEEK_SET);
+        char *fileContent = malloc(fsize);
+        fread(fileContent, fsize, 1, file);
+        fclose(file);
+
+        printf("Found file \n");
+        printf("file is: %s \n", fileContent);
+        printf("The request is a valid GET request\n");
+
+        char headerFormat[100];
+
+        int total = sizeof(headerFormat) + fsize;
 
         if (strcmp(fileExt, "js")==0){
-           headerFormat = "HTTP/1.0 200 OK\nContent-Length: %ld\nContent-Type: text-javascript\n\n";
+            sprintf(headerFormat, "HTTP/1.0 200 OK\nContent-Length: %d\nContent-Type: %s\n\n", total, "text-javascript");
         }
 
         if (strcmp(fileExt, "html")==0){
-            headerFormat = "HTTP/1.0 200 OK\nContent-Length: %ld\nContent-Type: text-html\n\n";
+            sprintf(headerFormat, "HTTP/1.0 200 OK\nContent-Length: %d\nContent-Type: %s\n\n", total, "text-html");
         }
 
         if (strcmp(fileExt, "css")==0){
-            headerFormat = "HTTP/1.0 200 OK\nContent-Length: %ld\nContent-Type: text-css\n\n";
+            sprintf(headerFormat, "HTTP/1.0 200 OK\nContent-Length: %d\nContent-Type: %s\n\n", total, "text-css");
         }
 
         if (strcmp(fileExt, "mp3")==0){
-            headerFormat = "HTTP/1.0 200 OK\nContent-Length: %ld\nContent-Type: audio-mpeg\n\n";
+            sprintf(headerFormat, "HTTP/1.0 200 OK\nContent-Length: %d\nContent-Type: %s\n\n", total, "audio-mpeg");
         }
 
         if (strcmp(fileExt, "img")==0){
-            headerFormat = "HTTP/1.0 200 OK\nContent-Length: %ld\nContent-Type: image-jpeg\n\n";
+            sprintf(headerFormat, "HTTP/1.0 200 OK\nContent-Length: %d\nContent-Type: %s\n\n", total, "image-jpeg");
         }
 
         if (strcmp(fileExt, "svg")==0){
-            headerFormat = "HTTP/1.0 200 OK\nContent-Length: %ld\nContent-Type: image-svg\n\n";
+            sprintf(headerFormat, "HTTP/1.0 200 OK\nContent-Length: %d\nContent-Type: %s\n\n", total, "image-svg");
         }
 
         if (strcmp(fileExt, "ico")==0){
-            headerFormat = "HTTP/1.0 200 OK\nContent-Length: %ld\nContent-Type: image-x-icon\n\n";
+            sprintf(headerFormat, "HTTP/1.0 200 OK\nContent-Length: %d\nContent-Type: %s\n\n", total, "image-x-icon");
         }
 
-        char *responseBody = malloc(fsize + strlen(headerFormat));
+        char *response = malloc(fsize + strlen(headerFormat) * sizeof(char *));
 
-        sprintf(responseBody, headerFormat, fsize);
-        strcat(responseBody, fileContent);
-
-        size_t responseLen = strlen(responseBody);
-        send(socketfd, responseBody, responseLen, 0);
-        free(responseBody);
+        memcpy(response, headerFormat, strlen(headerFormat) + 1);
+        memcpy(response + strlen(headerFormat), fileContent, fsize);
+        if (send(socketfd, response, strlen(headerFormat)+fsize, 0)==-1){
+            printf("sad :(\n");
+            int errnum = errno;
+            fprintf(stderr, "Value of errno: %d\n", errno);
+            fprintf(stderr, "Error opening file: %s\n", strerror( errnum ));
+        }
+        close(socketfd);
+        free(response);
         return;
     }
 

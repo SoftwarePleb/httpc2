@@ -9,6 +9,54 @@
 
 #define ARRAY_SIZE(arr) (sizeof((arr)) / sizeof((arr)[0]))
 
+char* get_file_extension(char* fileName){
+    regex_t fileExtensionRegex;
+    const char* FILE_EXTENSION_REGEX = "\\.(.*)$";
+    int numGroup = 2;
+    regmatch_t fileExtensionMatches[2];
+
+    if (regcomp(&fileExtensionRegex, FILE_EXTENSION_REGEX, REG_EXTENDED) !=0){
+        // This really shouldn't happen.
+        return NULL;
+    }
+
+    if (regexec(&fileExtensionRegex, fileName, numGroup, fileExtensionMatches, 0) != 0){
+        // no matches :(
+        return NULL;
+    }
+
+    int start = fileExtensionMatches[1].rm_so;
+    int length = fileExtensionMatches[1].rm_eo;
+    char* fileExtension = malloc((length - start + 1) * sizeof(char*));
+    strncpy(fileExtension, &fileName[start], length - start);
+    return fileExtension;
+}
+
+char* get_file_mime(char* fileExt){
+    if (strcmp(fileExt, "js")==0){
+        return "text-javascript";
+    }
+    if(strcmp(fileExt, "html")==0){
+        return "text-html";
+    }
+    if(strcmp(fileExt, "css")==0){
+        return "text-css";
+    }
+    if(strcmp(fileExt, "mp3")==0){
+       return "audio-mpeg";
+    }
+    if(strcmp(fileExt, "jpg")==0){
+        return "image-jpeg";
+    }
+    if(strcmp(fileExt, "ico")==0){
+        return "image-svg";
+    }
+    if(strcmp(fileExt, "image-x-icon")==0){
+        return "image-x-icon";
+    }
+    return NULL;
+}
+
 void readHttpRequest(char* Message, int MessangeLength, int socketfd){
     //prepare statements
 
@@ -57,21 +105,8 @@ void readHttpRequest(char* Message, int MessangeLength, int socketfd){
         fileName[length - start] = '\0';
         printf("filename: %s\n", fileName);
 
-        regex_t regFileExtension;
-        char* checkFileExtension = "\\.(.*)$";
 
-        regmatch_t p2match[2];
-        if (regcomp(&regFileExtension, checkFileExtension, REG_EXTENDED) == 0 && regexec(&regFileExtension, fileName, 2, p2match, 0) != 0) {
-            send(socketfd, InternalError, InternalErrorLen, 0);
-            close(socketfd);
-            return;
-        }
-
-        int start2 = p2match[1].rm_so;
-        int length2 = p2match[1].rm_eo;
-        char fileExt[length2 - start2 + 1];
-        memcpy(fileExt, &fileName[start2], length2-start2);
-        fileExt[length2 - start2] = '\0';
+        char* fileExt = get_file_extension(fileName);
         printf("fileExtension: %s\n", fileExt);
 
 
@@ -107,37 +142,7 @@ void readHttpRequest(char* Message, int MessangeLength, int socketfd){
 
         int total = sizeof(headerFormat) + fsize;
 
-        if (strcmp(fileExt, "js")==0){
-            sprintf(headerFormat, "HTTP/1.0 200 OK\nContent-Length: %d\nContent-Type: %s\n\n", total, "text-javascript");
-        }
-
-        if (strcmp(fileExt, "html")==0){
-            sprintf(headerFormat, "HTTP/1.0 200 OK\nContent-Length: %d\nContent-Type: %s\n\n", total, "text-html");
-        }
-
-        if (strcmp(fileExt, "css")==0){
-            sprintf(headerFormat, "HTTP/1.0 200 OK\nContent-Length: %d\nContent-Type: %s\n\n", total, "text-css");
-        }
-
-        if (strcmp(fileExt, "mp3")==0){
-            sprintf(headerFormat, "HTTP/1.0 200 OK\nContent-Length: %d\nContent-Type: %s\n\n", total, "audio-mpeg");
-        }
-
-        if (strcmp(fileExt, "img")==0){
-            sprintf(headerFormat, "HTTP/1.0 200 OK\nContent-Length: %d\nContent-Type: %s\n\n", total, "image-jpeg");
-        }
-
-        if (strcmp(fileExt, "jpg")==0){
-            sprintf(headerFormat, "HTTP/1.0 200 OK\nContent-Length: %d\nContent-Type: %s\n\n", total, "image-jpeg");
-        }
-
-        if (strcmp(fileExt, "svg")==0){
-            sprintf(headerFormat, "HTTP/1.0 200 OK\nContent-Length: %d\nContent-Type: %s\n\n", total, "image-svg");
-        }
-
-        if (strcmp(fileExt, "ico")==0){
-            sprintf(headerFormat, "HTTP/1.0 200 OK\nContent-Length: %d\nContent-Type: %s\n\n", total, "image-x-icon");
-        }
+        sprintf(headerFormat, "HTTP/1.0 200 OK\nContent-Length: %d\nContent-Type: %s\n\n", total, get_file_extension(fileExt));
 
         char *response = malloc(fsize + strlen(headerFormat) * sizeof(char *));
 

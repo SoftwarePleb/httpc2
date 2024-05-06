@@ -6,6 +6,7 @@
 #include <arpa/inet.h>
 #include <regex.h>
 #include <errno.h>
+#include <stdbool.h>
 
 #define ARRAY_SIZE(arr) (sizeof((arr)) / sizeof((arr)[0]))
 
@@ -57,6 +58,22 @@ char* get_file_mime(char* fileExt){
     return NULL;
 }
 
+bool IsBinary(char* fileExt){
+    if(strcmp(fileExt, "mp3")==0){
+        return true;
+    }
+    if(strcmp(fileExt, "jpg")==0){
+        return true;
+    }
+    if(strcmp(fileExt, "jepg")==0){
+        return true;
+    }
+    if(strcmp(fileExt, "svg")==0){
+        return true;
+    }
+    return false;
+}
+
 void readHttpRequest(char* Message, int MessangeLength, int socketfd){
     //prepare statements
 
@@ -88,8 +105,7 @@ void readHttpRequest(char* Message, int MessangeLength, int socketfd){
 
 
     // get reg matches to capture url
-    regmatch_t pmatch[3];
-    if (regcomp(&regex, getRegex, REG_EXTENDED) == 0 && regexec(&regex, Message, 3, pmatch, 0) == 0) {
+    regmatch_t pmatch[3]; if (regcomp(&regex, getRegex, REG_EXTENDED) == 0 && regexec(&regex, Message, 3, pmatch, 0) == 0) {
 
         if(pmatch[1].rm_eo == pmatch[1].rm_so){
             printf("we got a valid get but it didn't have a resource");
@@ -105,12 +121,11 @@ void readHttpRequest(char* Message, int MessangeLength, int socketfd){
         fileName[length - start] = '\0';
         printf("filename: %s\n", fileName);
 
-
         char* fileExt = get_file_extension(fileName);
         printf("fileExtension: %s\n", fileExt);
 
-
-        if((strcmp(fileExt, "svg")) == 0 || (strcmp(fileExt, "jpg")) == 0 || (strcmp(fileExt, "mp3") == 0) ){
+        bool isBinary = IsBinary(fileExt);
+        if(isBinary){
             file = fopen(fileName, "rb");
         } else{
             file = fopen(fileName, "r");
@@ -142,7 +157,9 @@ void readHttpRequest(char* Message, int MessangeLength, int socketfd){
 
         int total = sizeof(headerFormat) + fsize;
 
-        sprintf(headerFormat, "HTTP/1.0 200 OK\nContent-Length: %d\nContent-Type: %s\n\n", total, get_file_extension(fileExt));
+        char* mime = get_file_mime(fileExt);
+
+        sprintf(headerFormat, "HTTP/1.0 200 OK\nContent-Length: %d\nContent-Type: %s\n\n", total, mime);
 
         char *response = malloc(fsize + strlen(headerFormat) * sizeof(char *));
 

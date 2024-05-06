@@ -10,8 +10,6 @@
 #define ARRAY_SIZE(arr) (sizeof((arr)) / sizeof((arr)[0]))
 
 void readHttpRequest(char* Message, int MessangeLength, int socketfd){
-
-
     //prepare statements
 
     char responseSuccess[] = "HTTP/1.0 200 OK\nContent-Length: 12\nContent-Type: text-html\n\nHello World!";
@@ -92,10 +90,13 @@ void readHttpRequest(char* Message, int MessangeLength, int socketfd){
 
         printf("string test");
         fseek(file, 0, SEEK_END);
-        long fsize = ftell(file);
+        size_t fsize = ftell(file);
         fseek(file, 0, SEEK_SET);
         char *fileContent = malloc(fsize);
-        fread(fileContent, fsize, 1, file);
+        size_t bytesRead = fread(fileContent, fsize, 1, file);
+        if (bytesRead<0){
+            printf("error\n");
+        }
         fclose(file);
 
         printf("Found file \n");
@@ -123,6 +124,10 @@ void readHttpRequest(char* Message, int MessangeLength, int socketfd){
         }
 
         if (strcmp(fileExt, "img")==0){
+            sprintf(headerFormat, "HTTP/1.0 200 OK\nContent-Length: %d\nContent-Type: %s\n\n", total, "image-jpeg");
+        }
+
+        if (strcmp(fileExt, "jpg")==0){
             sprintf(headerFormat, "HTTP/1.0 200 OK\nContent-Length: %d\nContent-Type: %s\n\n", total, "image-jpeg");
         }
 

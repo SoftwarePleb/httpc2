@@ -9,6 +9,107 @@
 #include <stdbool.h>
 
 #define ARRAY_SIZE(arr) (sizeof((arr)) / sizeof((arr)[0]))
+#define REGEX_GROUP_COUNT 3
+
+char *generate_success(char *body) {
+    const char *htmlTemplate = "HTTP/1.0 200 Success\nContent-Length: %d\nContent-Type: text-html\n\n"
+                               "<!DOCTYPE html><html><head><title>Success</title></head><body>"
+                               "<h1>Success</h1><p>%s</p></body></html>";
+
+    // Compute the size of the final string
+    size_t htmlSize =
+            strlen(htmlTemplate) - 4 + strlen(body) + 1;  // -4 for the %s and %d in the template, +1 for the null terminal
+
+    size_t total = htmlSize + strlen(body);
+
+    // Allocate memory for the final string
+    char *html = malloc(htmlSize);
+
+    // Replace the %s in the template with the body string
+    sprintf(html, htmlTemplate, total, body);
+
+    return html;
+}
+
+char *generate_not_found(char *body) {
+    const char *htmlTemplate = "HTTP/1.0 404 Not Found\nContent-Length: %d\nContent-Type: text-html\n\n"
+                               "<!DOCTYPE html><html><head><title>Not Found</title></head><body>"
+                               "<h1>Not Found</h1><p>%s</p></body></html>";
+
+    // Compute the size of the final string
+    size_t htmlSize =
+            strlen(htmlTemplate) - 4 + strlen(body) + 1;  // -4 for the %s and %d in the template, +1 for the null terminal
+
+    size_t total = htmlSize + strlen(body);
+
+    // Allocate memory for the final string
+    char *html = malloc(htmlSize);
+
+    // Replace the %s in the template with the body string
+    sprintf(html, htmlTemplate, total, body);
+
+    return html;
+}
+
+char *generate_not_implemented(char *body) {
+    const char *htmlTemplate = "HTTP/1.0 501 Not Implemented\nContent-Length: %d\nContent-Type: text-html\n\n"
+                               "<!DOCTYPE html><html><head><title>Not Implemented</title></head><body>"
+                               "<h1>Not Implemented</h1><p>%s</p></body></html>";
+
+    // Compute the size of the final string
+    size_t htmlSize =
+            strlen(htmlTemplate) - 4 + strlen(body) + 1;  // -4 for the %s and %d in the template, +1 for the null terminal
+
+    size_t  total = htmlSize + strlen(body);
+    // Allocate memory for the final string
+    char *html = malloc(htmlSize);
+
+    // Replace the %s in the template with the body string
+    sprintf(html, htmlTemplate, total, body);
+
+    return html;
+}
+
+
+char *generate_internal_server_error(char *body) {
+    const char *htmlTemplate = "HTTP/1.0 500 Internal Server Error\nContent-Length: %d\nContent-Type: text-html\n\n"
+                               "<!DOCTYPE html><html><head><title>Internal Server Error</title></head><body>"
+                               "<h1>Internal Server Error</h1><p>%s</p></body></html>";
+
+    // Compute the size of the final string
+    size_t htmlSize =
+            strlen(htmlTemplate) - 4 + strlen(body) + 1;  // -4 for the %s and %d in the template, +1 for the null terminal
+
+    size_t  total = htmlSize + strlen(body);
+    // Allocate memory for the final string
+    char *html = malloc(htmlSize);
+
+    // Replace the %s in the template with the body string
+    sprintf(html, htmlTemplate, total, body);
+
+    return html;
+}
+
+char *generate_bad_request(char *body) {
+    const char *htmlTemplate = "HTTP/1.0 400 bad request\nContent-Length: %d\nContent-Type: text-html\n\n"
+                               "<!DOCTYPE html><html><head><title>Bad Request</title></head><body>"
+                               "<h1>bad request</h1><p>%s</p></body></html>";
+
+    // Compute the size of the final string
+    size_t htmlSize =
+            strlen(htmlTemplate) - 4 + strlen(body) + 1;  // -4 for the %s and %d in the template, +1 for the null terminal
+
+    size_t  total = htmlSize + strlen(body);
+    // Allocate memory for the final string
+    char *html = malloc(htmlSize);
+
+    // Replace the %s in the template with the body string
+    sprintf(html, htmlTemplate, total, body);
+
+    return html;
+}
+
+
 
 char* get_file_extension(char* fileName){
     regex_t fileExtensionRegex;
@@ -63,7 +164,7 @@ char* get_file_mime(char* fileExt){
     return NULL;
 }
 
-bool IsBinaryFile(char* fileExt){
+bool is_binary_file(char* fileExt){
     if(strcmp(fileExt, "mp3")==0){
         return true;
     }
@@ -79,44 +180,19 @@ bool IsBinaryFile(char* fileExt){
     return false;
 }
 
-void handleRequest(char* Message, int MessangeLength, int socketfd){
-    //prepare statements
-
-    char responseSuccess[] = "HTTP/1.0 200 OK\nContent-Length: 12\nContent-Type: text-html\n\nHello World!";
-    int responseSuccessLen = strlen(responseSuccess);
-
-    char requestIncorrect[] = "HTTP/1.0 400 Bad Request\nContent-Length: 12\nContent-Type: text-html\n\nBad Request";
-    int requestIncorrectLen = strlen(requestIncorrect);
-
-    char URLNotFound[] = "HTTP/1.0 404 Not Found\nContent-Length: 12\nContent-Type: text-html\n\nNot Found";
-    int URLNotFoundLen = strlen(URLNotFound);
-
-    char InternalError[] = "HTTP/1.0 500 Internal Server Error\nContent-Length: 12\nContent-Type: text-html\n\n500 Internal Server Error";
-    int InternalErrorLen = strlen(InternalError);
-
-    char NotImplemented[] = "HTTP/1.0 501 Not Implemented\nContent-Length: 12\nContent-Type: text-html\n\nNot Implemented";
-    int NotImplementedLen = strlen(NotImplemented);
-
-    // check that the header is correctly formed.
-    printf("%.*s\n", (int)MessangeLength, Message);
+bool handle_get_request(char *Message, int socketfd){
     regex_t regex;
-
-    // Check for POST, PUT and DELETE request.
-    char *postRegex = "^POST \\/[^\\s](.*) HTTP\\/[0-9]\\.[0-9]";
-    char *putRegex = "^PUT \\/[^\\s](.*) HTTP\\/[0-9]\\.[0-9]";
-    char *deleteRegex = "^DELETE \\/[^\\s](.*) HTTP\\/[0-9]\\.[0-9]";
+    regmatch_t pmatch[REGEX_GROUP_COUNT];
     char *getRegex = "^GET \\/([^ ]*) HTTP\\/[0-9]\\.[0-9]\r\n";
-
-
-
-    // get reg matches to capture url
-    regmatch_t pmatch[3];
     if (regcomp(&regex, getRegex, REG_EXTENDED) == 0 && regexec(&regex, Message, 3, pmatch, 0) == 0) {
 
         if(pmatch[1].rm_eo == pmatch[1].rm_so){
             printf("we got a valid get but it didn't have a resource");
-            send(socketfd, responseSuccess, responseSuccessLen, 0);
-            return;
+            char* responseSuccess = generate_success("Successful request but nothing to do");
+            send(socketfd, responseSuccess, strlen(responseSuccess), 0);
+            free(responseSuccess);
+            close(socketfd);
+            return true;
         }
 
         FILE* file;
@@ -130,7 +206,7 @@ void handleRequest(char* Message, int MessangeLength, int socketfd){
         char* fileExt = get_file_extension(fileName);
         printf("fileExtension: %s\n", fileExt);
 
-        bool isBinary = IsBinaryFile(fileExt);
+        bool isBinary = is_binary_file(fileExt);
         if(isBinary){
             file = fopen(fileName, "rb");
         } else{
@@ -138,11 +214,13 @@ void handleRequest(char* Message, int MessangeLength, int socketfd){
         }
 
         if(file == NULL){
-           printf("File Not Found");
-           send(socketfd, URLNotFound, URLNotFoundLen, 0);
-           close(socketfd);
-           return;
-       }
+            printf("File Not Found");
+            char* URLNotFound = generate_not_found("Couldn't find the file :(");
+            send(socketfd, URLNotFound, strlen(URLNotFound), 0);
+            free(URLNotFound);
+            close(socketfd);
+            return true;
+        }
 
         printf("string test");
         fseek(file, 0, SEEK_END);
@@ -179,30 +257,103 @@ void handleRequest(char* Message, int MessangeLength, int socketfd){
         }
         close(socketfd);
         free(response);
-        return;
+        return true;
     }
+    return false;
 
-    if (regcomp(&regex, postRegex, REG_EXTENDED) == 0 && regexec(&regex, Message, 0, NULL, 0) == 0) {
+}
+
+bool handle_delete_request(char *Message, int socketfd){
+    regex_t regex;
+    regmatch_t pmatch[REGEX_GROUP_COUNT];
+    char *deleteRegex = "^DELETE \\/([^ ]*) HTTP\\/[0-9]\\.[0-9]\r\n";
+    if (regcomp(&regex, deleteRegex, REG_EXTENDED) == 0 && regexec(&regex, Message, 3, pmatch, 0) == 0) {
         printf("The request is a valid POST request\n");
-        send(socketfd, NotImplemented, NotImplementedLen, 0);
-        return; }
+        char* notImplemented = generate_not_implemented("Post Requests are not implemented.");
+        send(socketfd, notImplemented, strlen(notImplemented), 0);
+        free(notImplemented);
+        close(socketfd);
+        return true;
+    }
+    return false;
+}
 
-    if (regcomp(&regex, putRegex, REG_EXTENDED) == 0 && regexec(&regex, Message, 0, NULL, 0) == 0) {
-        printf("The request is a valid PUT request\n");
-        send(socketfd, NotImplemented, NotImplementedLen, 0);
+bool hande_put_request(char *Message, int socketfd){
+    regex_t regex;
+    regmatch_t pmatch[REGEX_GROUP_COUNT];
+    char *putRegex = "^PUT \\/([^ ]*) HTTP\\/[0-9]\\.[0-9]\r\n";
+    if (regcomp(&regex, putRegex, REG_EXTENDED) == 0 && regexec(&regex, Message, 3, pmatch, 0) == 0) {
+        printf("The request is a valid POST request\n");
+        char* notImplemented = generate_not_implemented("Post Requests are not implemented.");
+        send(socketfd, notImplemented, strlen(notImplemented), 0);
+        free(notImplemented);
+        close(socketfd);
+        return true;
+    }
+    return false;
+}
+
+
+bool handle_post_request(char *Message, int socketfd){
+    regex_t regex;
+    regmatch_t pmatch[REGEX_GROUP_COUNT];
+    char *postRegex = "^POST \\/([^ ]*) HTTP\\/[0-9]\\.[0-9]\r\n";
+    if (regcomp(&regex, postRegex, REG_EXTENDED) == 0 && regexec(&regex, Message, 3, pmatch, 0) == 0) {
+        printf("The request is a valid POST request\n");
+        char* notImplemented = generate_not_implemented("Post Requests are not implemented.");
+        send(socketfd, notImplemented, strlen(notImplemented), 0);
+        free(notImplemented);
+        close(socketfd);
+        return true;
+    }
+    return false;
+}
+
+
+void handleRequest(char* Message, int MessangeLength, int socketfd){
+    //prepare statements
+
+
+
+    // check that the header is correctly formed.
+    printf("%.*s\n", (int)MessangeLength, Message);
+    regex_t regex;
+
+    // Check for POST, PUT and DELETE request.
+    char *postRegex = "^POST \\/[^\\s](.*) HTTP\\/[0-9]\\.[0-9]";
+    char *putRegex = "^PUT \\/[^\\s](.*) HTTP\\/[0-9]\\.[0-9]";
+    char *deleteRegex = "^DELETE \\/[^\\s](.*) HTTP\\/[0-9]\\.[0-9]";
+    char *getRegex = "^GET \\/([^ ]*) HTTP\\/[0-9]\\.[0-9]\r\n";
+
+
+    if(handle_get_request(Message, socketfd)){
+        return;
+    }
+    if(hande_put_request(Message, socketfd)){
+        return;
+    }
+    if(handle_post_request(Message, socketfd)){
+        return;
+    }
+    if(handle_delete_request(Message, socketfd)){
         return;
     }
 
-    if (regcomp(&regex, deleteRegex, REG_EXTENDED) == 0 && regexec(&regex, Message, 0, NULL, 0) == 0) {
-        printf("The request is a valid Delete request\n");
-        send(socketfd, NotImplemented, NotImplementedLen, 0);
-        return;
+
+    // get reg matches to capture url
+    regmatch_t pmatch[3];
+    if (regcomp(&regex, getRegex, REG_EXTENDED) == 0 && regexec(&regex, Message, 3, pmatch, 0) == 0) {
+
+
     }
 
     //if we reach here then the request is not correctly formatted
     printf("The request does not have a properly formatted header\n");
-    send(socketfd, requestIncorrect, requestIncorrectLen, 0);
+    char*  requestIncorrect = generate_bad_request("Bad request :(");
+    send(socketfd, requestIncorrect, strlen(requestIncorrect), 0);
+    free(requestIncorrect);
     close(socketfd);
+    return;
 }
 
 

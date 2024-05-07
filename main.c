@@ -12,7 +12,7 @@
 
 char* get_file_extension(char* fileName){
     regex_t fileExtensionRegex;
-    const char* FILE_EXTENSION_REGEX = "\\.(.*)$";
+    const char* FILE_EXTENSION_REGEX = "([^.]*)$";
     int numGroup = 2;
     regmatch_t fileExtensionMatches[2];
 
@@ -26,11 +26,16 @@ char* get_file_extension(char* fileName){
         return NULL;
     }
 
-    int start = fileExtensionMatches[1].rm_so;
-    int length = fileExtensionMatches[1].rm_eo;
-    char* fileExtension = malloc((length - start + 1) * sizeof(char*));
-    strncpy(fileExtension, &fileName[start], length - start);
-    return fileExtension;
+    int startOfMatch = fileExtensionMatches[1].rm_so;
+    int endOfMatch = fileExtensionMatches[1].rm_eo;
+    char* fileExt = malloc((endOfMatch-startOfMatch) * sizeof(char *));
+    if(fileExt == NULL){
+        regfree(&fileExtensionRegex);
+        return NULL;
+    }
+    memcpy(fileExt, &fileName[startOfMatch], endOfMatch-startOfMatch);
+    regfree(&fileExtensionRegex);
+    return fileExt;
 }
 
 char* get_file_mime(char* fileExt){
@@ -58,7 +63,7 @@ char* get_file_mime(char* fileExt){
     return NULL;
 }
 
-bool IsBinary(char* fileExt){
+bool IsBinaryFile(char* fileExt){
     if(strcmp(fileExt, "mp3")==0){
         return true;
     }
@@ -74,7 +79,7 @@ bool IsBinary(char* fileExt){
     return false;
 }
 
-void readHttpRequest(char* Message, int MessangeLength, int socketfd){
+void handleRequest(char* Message, int MessangeLength, int socketfd){
     //prepare statements
 
     char responseSuccess[] = "HTTP/1.0 200 OK\nContent-Length: 12\nContent-Type: text-html\n\nHello World!";
@@ -105,7 +110,8 @@ void readHttpRequest(char* Message, int MessangeLength, int socketfd){
 
 
     // get reg matches to capture url
-    regmatch_t pmatch[3]; if (regcomp(&regex, getRegex, REG_EXTENDED) == 0 && regexec(&regex, Message, 3, pmatch, 0) == 0) {
+    regmatch_t pmatch[3];
+    if (regcomp(&regex, getRegex, REG_EXTENDED) == 0 && regexec(&regex, Message, 3, pmatch, 0) == 0) {
 
         if(pmatch[1].rm_eo == pmatch[1].rm_so){
             printf("we got a valid get but it didn't have a resource");
@@ -124,7 +130,7 @@ void readHttpRequest(char* Message, int MessangeLength, int socketfd){
         char* fileExt = get_file_extension(fileName);
         printf("fileExtension: %s\n", fileExt);
 
-        bool isBinary = IsBinary(fileExt);
+        bool isBinary = IsBinaryFile(fileExt);
         if(isBinary){
             file = fopen(fileName, "rb");
         } else{
@@ -207,7 +213,7 @@ int main(int argc, char *argv[]) {
     socklen_t clientAddrLen;
     struct sockaddr clientAddr;
     char buffer[1024];
-    int readchk;
+    size_t readchk;
 
     // get the port from the user and check it works
     if (argc > 3) {
@@ -301,7 +307,7 @@ int main(int argc, char *argv[]) {
         }
 
         //handle http request
-        readHttpRequest(buffer, readchk, acceptchk);
+        handleRequest(buffer, readchk, acceptchk);
 
     }
 

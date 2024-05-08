@@ -310,22 +310,9 @@ bool handle_post_request(char *Message, int socketfd){
 }
 
 
-void handleRequest(char* Message, int MessangeLength, int socketfd){
-    //prepare statements
+void handleRequest(char* Message, int socketfd){
 
-
-
-    // check that the header is correctly formed.
-    printf("%.*s\n", (int)MessangeLength, Message);
-    regex_t regex;
-
-    // Check for POST, PUT and DELETE request.
-    char *postRegex = "^POST \\/[^\\s](.*) HTTP\\/[0-9]\\.[0-9]";
-    char *putRegex = "^PUT \\/[^\\s](.*) HTTP\\/[0-9]\\.[0-9]";
-    char *deleteRegex = "^DELETE \\/[^\\s](.*) HTTP\\/[0-9]\\.[0-9]";
-    char *getRegex = "^GET \\/([^ ]*) HTTP\\/[0-9]\\.[0-9]\r\n";
-
-
+    // try to handle the request
     if(handle_get_request(Message, socketfd)){
         return;
     }
@@ -339,21 +326,12 @@ void handleRequest(char* Message, int MessangeLength, int socketfd){
         return;
     }
 
-
-    // get reg matches to capture url
-    regmatch_t pmatch[3];
-    if (regcomp(&regex, getRegex, REG_EXTENDED) == 0 && regexec(&regex, Message, 3, pmatch, 0) == 0) {
-
-
-    }
-
-    //if we reach here then the request is not correctly formatted
+    //if we reach here then the message did not match the put, delete, post, or get
     printf("The request does not have a properly formatted header\n");
     char*  requestIncorrect = generate_bad_request("Bad request :(");
     send(socketfd, requestIncorrect, strlen(requestIncorrect), 0);
     free(requestIncorrect);
     close(socketfd);
-    return;
 }
 
 
@@ -458,7 +436,7 @@ int main(int argc, char *argv[]) {
         }
 
         //handle http request
-        handleRequest(buffer, readchk, acceptchk);
+        handleRequest(buffer, acceptchk);
 
     }
 

@@ -55,8 +55,14 @@ build CMakeFiles/http.dir/main.c.o: C_COMPILER__http_unscanned_Debug /home/Leo/s
   OBJECT_DIR = CMakeFiles/http.dir
   OBJECT_FILE_DIR = CMakeFiles/http.dir
 
-build CMakeFiles/http.dir/server.c.o: C_COMPILER__http_unscanned_Debug /home/Leo/source/http/server.c || cmake_object_order_depends_target_http
-  DEP_FILE = CMakeFiles/http.dir/server.c.o.d
+build CMakeFiles/http.dir/helpers.c.o: C_COMPILER__http_unscanned_Debug /home/Leo/source/http/helpers.c || cmake_object_order_depends_target_http
+  DEP_FILE = CMakeFiles/http.dir/helpers.c.o.d
+  FLAGS = -g -std=gnu11 -fdiagnostics-color=always
+  OBJECT_DIR = CMakeFiles/http.dir
+  OBJECT_FILE_DIR = CMakeFiles/http.dir
+
+build CMakeFiles/http.dir/requests.c.o: C_COMPILER__http_unscanned_Debug /home/Leo/source/http/requests.c || cmake_object_order_depends_target_http
+  DEP_FILE = CMakeFiles/http.dir/requests.c.o.d
   FLAGS = -g -std=gnu11 -fdiagnostics-color=always
   OBJECT_DIR = CMakeFiles/http.dir
   OBJECT_FILE_DIR = CMakeFiles/http.dir
@@ -69,7 +75,7 @@ build CMakeFiles/http.dir/server.c.o: C_COMPILER__http_unscanned_Debug /home/Leo
 #############################################
 # Link the executable http
 
-build http: C_EXECUTABLE_LINKER__http_Debug CMakeFiles/http.dir/main.c.o CMakeFiles/http.dir/server.c.o
+build http: C_EXECUTABLE_LINKER__http_Debug CMakeFiles/http.dir/main.c.o CMakeFiles/http.dir/helpers.c.o CMakeFiles/http.dir/requests.c.o
   FLAGS = -g
   OBJECT_DIR = CMakeFiles/http.dir
   POST_BUILD = :

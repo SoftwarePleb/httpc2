@@ -4,6 +4,8 @@ project(http C)
 set(CMAKE_C_STANDARD 11)
 
 add_executable(http main.c
-        server.c
-        server.h
+        helpers.c
+        helpers.h
+        requests.c
+        requests.h
 )

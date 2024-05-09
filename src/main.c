@@ -100,7 +100,6 @@ int main(int argc, char *argv[]) {
         close(socketfd);
 
     }
-
     freeaddrinfo(result);
 
     if (result == NULL){

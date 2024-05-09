@@ -1,6 +1,7 @@
 //
 // Created by Leo on 5/8/24.
 //
+#include <stdbool.h>
 
 #ifndef HTTP_HELPERS_H
 #define HTTP_HELPERS_H

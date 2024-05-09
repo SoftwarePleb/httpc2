@@ -8,4 +8,5 @@ add_executable(http main.c
         helpers.h
         requests.c
         requests.h
+        ../tests/tests.c
 )

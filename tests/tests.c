@@ -14,27 +14,29 @@
 
 int main(int argc, char *argv[]) {
 
-    //tests for helpers
+    //tests for helpers.h
+
+    // Tests for generateHttpResponse
+    // Test success response
     char* testSuccess = generateHttpResponse(SUCCESS, "Success Test Response", "Success Test Response");
-         "HTTP/1.0 200 Success\nContent-Length: 234\nContent-Type: text-html\n\n"
-                         "<!DOCTYPE html><html><head><title>%s</title></head>"
-                         "<body><h1>%s</h1><p>%s</p></body></html>";
-
-    char* correctSuccess = "HTTP/1.0 200 Success\nContent-Length: 234\nContent-Type: text-html\n\n<!DOCTYPE html><html><head><title>Success Test Response</title></head><body><h1>Success Test Response</h1><p>Success Test Response</p></body></html>";
-
-
-    printf("%s\n", testSuccess);
-    printf("%s\n", correctSuccess);
-
-    printf("test %d\n", strcmp(testSuccess, correctSuccess)==0);
-
+    char* correctSuccess = "HTTP/1.0 200 Success\nContent-Length: 235\nContent-Type: text-html\n\n<!DOCTYPE html><html><head><title>Success Test Response</title></head><body><h1>Success Test Response</h1><p>Success Test Response</p></body></html>";
     assert(strcmp(testSuccess, correctSuccess)==0);
 
+    char* test404 = generateHttpResponse(NOT_FOUND, "Test 404 Response", "Test 404 Response");
+    char* correct404 = "HTTP/1.0 404 Not Found\nContent-Length: 221\nContent-Type: text-html\n\n<!DOCTYPE html><html><head><title>Test 404 Response</title></head><body><h1>Test 404 Response</h1><p>Test 404 Response</p></body></html>";
+    assert(strcmp(test404, correct404)==0);
 
-    printf("%s\n", testSuccess);
-    //assert(testSuccess, );
+    char* test501 = generateHttpResponse(NOT_IMPLEMENTED, "Test 501 response", "Test 501 response");
+    char* correct501 = "HTTP/1.0 501 Not Implemented\nContent-Length: 227\nContent-Type: text-html\n\n<!DOCTYPE html><html><head><title>Test 501 response</title></head><body><h1>Test 501 response</h1><p>Test 501 response</p></body></html>";
+    assert(strcmp(test501, correct501)==0);
 
-    //assert();
+    char* test500 = generateHttpResponse(INTERNAL_SERVER_ERROR, "test 500 error", "test 500 error");
+    char* correct500 = "HTTP/1.0 500 Internal Server Error\nContent-Length: 221\nContent-Type: text-html\n\n<!DOCTYPE html><html><head><title>test 500 error</title></head><body><h1>test 500 error</h1><p>test 500 error</p></body></html>";
+    assert(strcmp(test500, correct500)==0);
+
+
+
+    printf("Wohoo all the tests passed");
     return 0;
 
 

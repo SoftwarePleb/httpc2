@@ -9,7 +9,7 @@
 #include <stdbool.h>
 
 char* generateHttpResponse(char *http_response, char *title, char *body){
-    const char* htmlTemplate = "HTTP/1.0 %s\nConent-Length: %d\nContent-Type: text-html\n\n"
+    const char* htmlTemplate = "HTTP/1.0 %s\nContent-Length: %d\nContent-Type: text-html\n\n"
                                "<!DOCTYPE html><html><head><title>%s</title></head>"
                                "<body><h1>%s</h1><p>%s</p></body></html>";
     size_t htmlSize = strlen(htmlTemplate) - 8 + strlen(http_response) + 2 * strlen(title) + strlen(body) + 1;

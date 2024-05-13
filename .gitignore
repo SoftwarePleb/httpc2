@@ -3,5 +3,5 @@
 cmake-build-debug
 .gitignore
 /.idea
-./.idea
+.idea
 /tests/.idea

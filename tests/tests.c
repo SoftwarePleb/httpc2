@@ -49,9 +49,44 @@ void testGetFileExtension(){
 
 }
 
+void  testGetMimeType(){
+    char* fileExt = getMimeType("jpg");
+    char* correctMime = "image/jpeg";
+    assert(strcmp(fileExt, correctMime)==0);
+
+    fileExt = getMimeType("sdfasdf");
+    correctMime = NULL;
+    assert(NULL == fileExt);
+
+}
+
+void testIsBinaryFile(){
+    bool isBinaryTest  = isBinaryFile("html");
+    bool isBinary = false;
+    assert(isBinaryTest == isBinary);
+
+    isBinaryTest  = isBinaryFile("jpg");
+    isBinary = true;
+    assert(isBinaryTest == isBinary);
+}
+
+void testToLower(){
+    char* testString = toLower("ADS$");
+    char* correctString = "ads$";
+    assert(strcmp(testString, correctString) == 0);
+
+    testString = toLower("AAA");
+    correctString = "aaa";
+    assert(strcmp(testString, correctString) == 0);
+}
+
 int main(int argc, char *argv[]) {
+    //test helper functions.
     testGenerateHttpResponse();
     testGetFileExtension();
+    testGetMimeType();
+    testIsBinaryFile();
+    testToLower();
     printf("wohoo all tests passed.");
     return 0;
 }

@@ -92,7 +92,7 @@ char* getMimeType(char* fileExt){
 }
 
 bool isBinaryFile(char* fileExt){
-    toLower(fileExt);
+    fileExt = toLower(fileExt);
     if(strcmp(fileExt, "mp3")==0){
         return true;
     }

@@ -9,6 +9,20 @@
 #include <stdbool.h>
 #include <ctype.h>
 
+char* toLower(const char* s) {
+    if(s == NULL)  return NULL;
+
+    int sLength = strlen(s);
+    char* lowerS = malloc(sizeof(char) * (sLength + 1));
+
+    for(int i=0; i<sLength; i++){
+        lowerS[i] = tolower(s[i]);
+    }
+    lowerS[sLength] = '\0'; // end of string
+
+    return lowerS;
+}
+
 char* generateHttpResponse(char *http_response, char *title, char *body){
     const char* htmlTemplate = "HTTP/1.0 %s\nContent-Length: %d\nContent-Type: text-html\n\n"
                                "<!DOCTYPE html><html><head><title>%s</title></head>"
@@ -23,6 +37,7 @@ char* generateHttpResponse(char *http_response, char *title, char *body){
 
 
 char* getFileExtension(char* fileName){
+    fileName = toLower(fileName);
     regex_t fileExtensionRegex;
     const char* FILE_EXTENSION_REGEX = "([^.]*)$";
     int numGroup = 2;
@@ -51,6 +66,7 @@ char* getFileExtension(char* fileName){
 }
 
 char* getMimeType(char* fileExt){
+    fileExt = toLower(fileExt);
     if (strcmp(fileExt, "js")==0){
         return "text/javascript";
     }
@@ -76,6 +92,7 @@ char* getMimeType(char* fileExt){
 }
 
 bool isBinaryFile(char* fileExt){
+    toLower(fileExt);
     if(strcmp(fileExt, "mp3")==0){
         return true;
     }

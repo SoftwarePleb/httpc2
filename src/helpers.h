@@ -10,5 +10,6 @@ char* generateHttpResponse(char *httpResponse, char *title, char *body);
 char* getFileExtension(char* fileName);
 char* getMimeType(char * fileExt);
 bool isBinaryFile(char *fileExt);
+char* toLower(char* string);
 
 #endif //HTTP_HELPERS_H

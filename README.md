@@ -1,4 +1,12 @@
-todo:
+# Simple Http
+### A simple http client server written in c to send files via http.
 
-continue refactor
-fix bug where segfault if request points to directory
+# Installation
+
+TODO
+
+# Running
+
+TODO
+
+

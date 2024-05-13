@@ -7,6 +7,7 @@
 #include <malloc.h>
 #include <regex.h>
 #include <stdbool.h>
+#include <ctype.h>
 
 char* generateHttpResponse(char *http_response, char *title, char *body){
     const char* htmlTemplate = "HTTP/1.0 %s\nContent-Length: %d\nContent-Type: text-html\n\n"
@@ -44,7 +45,7 @@ char* getFileExtension(char* fileName){
         regfree(&fileExtensionRegex);
         return NULL;
     }
-    memcpy(fileExt, &fileName[startOfMatch], endOfMatch-startOfMatch);
+    strcpy(fileExt, &fileName[startOfMatch]);
     regfree(&fileExtensionRegex);
     return fileExt;
 }

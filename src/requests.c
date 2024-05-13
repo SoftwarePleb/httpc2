@@ -5,7 +5,6 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <errno.h>
-#include <slcurses.h>
 #include <regex.h>
 #include <string.h>
 #include <malloc.h>

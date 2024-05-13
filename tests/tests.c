@@ -12,9 +12,8 @@
 #define NOT_IMPLEMENTED "501 Not Implemented"
 #define INTERNAL_SERVER_ERROR "500 Internal Server Error"
 
-int main(int argc, char *argv[]) {
-
-    //tests for helpers.h
+void testGenerateHttpResponse(){
+//tests for helpers.h
 
     // Tests for generateHttpResponse
     // Test success response
@@ -33,11 +32,26 @@ int main(int argc, char *argv[]) {
     char* test500 = generateHttpResponse(INTERNAL_SERVER_ERROR, "test 500 error", "test 500 error");
     char* correct500 = "HTTP/1.0 500 Internal Server Error\nContent-Length: 221\nContent-Type: text-html\n\n<!DOCTYPE html><html><head><title>test 500 error</title></head><body><h1>test 500 error</h1><p>test 500 error</p></body></html>";
     assert(strcmp(test500, correct500)==0);
+}
 
+void testGetFileExtension(){
+    char* testExt = getFileExtension("File.jpg");
+    char* correctExt = "jpg";
+    assert(strcmp(testExt, correctExt) == 0);
 
+    testExt = getFileExtension("File.JPG");
+    correctExt = "jpg";
+    assert(strcmp(testExt, correctExt) == 0);
 
-    printf("Wohoo all the tests passed");
+    testExt = getFileExtension("FileFile.File.JPG");
+    correctExt = "jpg";
+    assert(strcmp(testExt, correctExt) == 0);
+
+}
+
+int main(int argc, char *argv[]) {
+    testGenerateHttpResponse();
+    testGetFileExtension();
+    printf("wohoo all tests passed.");
     return 0;
-
-
 }

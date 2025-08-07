@@ -1,6 +1,6 @@
 #  Http2
 
-A simple HTTP server written in c. 
+A simple HTTP server written in c. Not production ready, just for fun.
 
 ## Description
 
